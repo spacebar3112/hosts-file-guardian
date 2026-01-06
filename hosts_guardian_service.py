@@ -135,11 +135,26 @@ class HostsGuardianService(win32serviceutil.ServiceFramework):
 def main():
     """Service entry point."""
     if len(sys.argv) == 1:
-        servicemanager.Initialize()
-        servicemanager.PrepareToHostSingle(HostsGuardianService)
-        servicemanager.StartServiceCtrlDispatcher()
+        # Running as service
+        try:
+            servicemanager.Initialize()
+            servicemanager.PrepareToHostSingle(HostsGuardianService)
+            servicemanager.StartServiceCtrlDispatcher()
+        except Exception as e:
+            # Log to file if event log fails
+            try:
+                logging.error(f"Service dispatcher error: {e}", exc_info=True)
+            except:
+                pass
     else:
-        win32serviceutil.HandleCommandLine(HostsGuardianService)
+        # Command line operation (install, start, stop, etc.)
+        try:
+            win32serviceutil.HandleCommandLine(HostsGuardianService)
+        except Exception as e:
+            print(f"Error: {e}")
+            import traceback
+            traceback.print_exc()
+            sys.exit(1)
 
 
 if __name__ == "__main__":
